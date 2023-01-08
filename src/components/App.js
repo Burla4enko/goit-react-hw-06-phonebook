@@ -17,11 +17,13 @@ export class App extends Component {
   };
 
   isInContact = (contacts, newName) => {
-    return contacts.map(person => person.name).includes(newName);
+    return contacts.filter(({ name }) =>
+      name.toLowerCase().includes(newName.toLowerCase().trim())
+    );
   };
 
   addContact = ({ name, number }, { resetForm }) => {
-    if (this.isInContact(this.state.contacts, name)) {
+    if (this.isInContact(this.state.contacts, name).length > 0) {
       return alert(`${name} is already in the contact list`);
     }
 
