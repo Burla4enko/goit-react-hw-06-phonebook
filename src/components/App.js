@@ -1,9 +1,12 @@
 import { nanoid } from 'nanoid';
 import { Component } from 'react';
+import { toast, Toaster } from 'react-hot-toast';
 import { ContactForm } from './ContactForm/ContactForm';
 import { ContactList } from './ContactList/ContactList';
 import { Filter } from './Filter/Filter';
 import { GlobalStyle } from './GlobalStyle';
+
+const LS_KEY = 'contacts';
 
 export class App extends Component {
   state = {
@@ -16,6 +19,18 @@ export class App extends Component {
     filter: '',
   };
 
+  componentDidMount() {
+    const savedContact = JSON.parse(localStorage.getItem(LS_KEY));
+    savedContact && this.setState({ contacts: [...savedContact] });
+  }
+
+  componentDidUpdate(_, prevState) {
+    const { contacts } = this.state;
+    if (prevState.contacts.length !== contacts.length) {
+      localStorage.setItem(LS_KEY, JSON.stringify(contacts));
+    }
+  }
+
   isInContact = (contacts, newName) => {
     return contacts.filter(({ name }) =>
       name.toLowerCase().includes(newName.toLowerCase().trim())
@@ -24,7 +39,7 @@ export class App extends Component {
 
   addContact = ({ name, number }, { resetForm }) => {
     if (this.isInContact(this.state.contacts, name).length > 0) {
-      return alert(`${name} is already in the contact list`);
+      return toast.error(`${name} is already in the contact list`);
     }
 
     const contact = {
@@ -57,6 +72,7 @@ export class App extends Component {
     return (
       <>
         <GlobalStyle />
+        <Toaster />
         <div>
           <h1>Phonebook</h1>
           <ContactForm onSubmit={this.addContact} />
