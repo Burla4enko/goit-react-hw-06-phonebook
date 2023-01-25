@@ -1,6 +1,6 @@
-import PropTypes from 'prop-types';
-import * as yup from 'yup';
 import { Formik } from 'formik';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-hot-toast';
 import {
   ContactFormStyled,
   Input,
@@ -8,26 +8,31 @@ import {
   Button,
   Label,
 } from './ContactForm.styled';
+import { addContact } from 'redux/contactsSlice';
+import { getContacts } from 'redux/selectors';
+import { validationScheme } from 'utils/validationSchema';
+import { isInContact } from 'utils/isInContact';
 
-export const ContactForm = ({ onSubmit }) => {
+export const ContactForm = () => {
+  const contacts = useSelector(getContacts);
+  const dispatch = useDispatch();
   const initialValues = { name: '', number: '' };
-  const NUMBER_PTTRN =
-    /\+?\d{1,4}?[-\d\s]?\(?\d{1,3}?\)?[-\d\s]?\d{1,4}[-\d\s]?\d{1,4}[-\d\s]?\d{1,9}/;
-  const errorMsgNumb =
-    'Phone number must be at least 5 digits and can contain spaces, dashes, parentheses and can start with +';
-  const NAME_PTTRN =
-    /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/;
-  const errorMsgName = `Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan`;
-  const scheme = yup.object().shape({
-    name: yup.string().min(3).matches(NAME_PTTRN, errorMsgName).required(),
-    number: yup.string().matches(NUMBER_PTTRN, errorMsgNumb).required(),
-  });
+
+  const onSubmit = ({ name, number }, { resetForm }) => {
+    if (isInContact(contacts, name).length > 0) {
+      return toast.error(`${name} is already in the contact list`);
+    }
+
+    dispatch(addContact(name, number));
+
+    resetForm();
+  };
 
   return (
     <Formik
       initialValues={initialValues}
       onSubmit={onSubmit}
-      validationSchema={scheme}
+      validationSchema={validationScheme}
     >
       <ContactFormStyled autoComplete="off">
         <Label htmlFor="name">
@@ -46,8 +51,4 @@ export const ContactForm = ({ onSubmit }) => {
       </ContactFormStyled>
     </Formik>
   );
-};
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
 };
